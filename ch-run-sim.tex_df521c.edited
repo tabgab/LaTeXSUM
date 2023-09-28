@@ -1,0 +1,179 @@
+\chapter{Running Simulations}
+\label{cha:run-sim}
+
+\section{Introduction}
+\label{cha:run-sim:intro}
+
+This chapter describes how to run simulations. It covers basic usage, user interfaces, running simulation campaigns, and many other topics.
+
+\section{Simulation Executables vs Libraries}
+\label{sec:run-sim:running}
+
+As we have seen in the \textit{Build} chapter, simulations may be compiled to an executable or to a shared library. When the build output is an executable, it can be run directly. For example, the Fifo example simulation can be run with the following command:
+
+\begin{commandline}
+$ ./fifo
+\end{commandline}
+
+Simulations compiled to a shared library can be run using the \fprog{opp\_run} program. For example, if we compiled the Fifo simulation to a shared library on Linux, the build output would be a \ttt{libfifo.so} file that could be run with the following command:
+
+\begin{commandline}
+$ opp_run -l fifo
+\end{commandline}
+
+The \fopt{-l} option tells \fprog{opp\_run} to load the given shared library. The \fopt{-l} option will be covered in detail in section \ref{sec:run-sim:loading-extra-libraries}.
+
+\begin{note}
+Normal simulation executables like the above \ttt{fifo} are also capable of loading additional shared libraries in the same way. What's more, \fprog{opp\_run} is actually nothing else but a specially-named simulation executable with no model code in it.
+\end{note}
+
+\section{Command-Line Options}
+\label{sec:run-sim:command-line-options}
+
+The above commands illustrate just the simplest case. Usually you will need to add extra command-line options, for example to specify what ini file(s) to use, which configuration to run, which user interface to activate, where to load NED files from, and so on. The rest of this chapter will cover these options.
+
+To get a complete list of command line options accepted by simulations, run the \fprog{opp\_run} program (or any other simulation executable) with \fopt{-h}:
+
+\begin{commandline}
+$ opp_run -h
+\end{commandline}
+
+Or:
+\begin{commandline}
+$ ./fifo -h
+\end{commandline}
+
+\section{Configuration Options on the Command Line}
+\label{sec:run-sim:config-options-on-cmdline}
+
+Configuration options can also be specified on the command line, not only in ini files. To do so, prefix the option name with a double dash, and append the value with an equal sign. Be sure not to have spaces around the equal sign. If the value contains spaces or shell metacharacters, you'll need to protect the value (or the whole option) with quotes or apostrophes.
+
+Example:
+
+\begin{commandline}
+$ ./fifo --debug-on-errors=true
+\end{commandline}
+
+In case an option is specified both on the command line and in an ini file, the command line takes precedence.
+
+To get the list of all possible configuration options, use the \fopt{-h config} option. (The additional \fopt{-s} option below just makes the output less verbose.)
+
+\begin{commandline}
+$ opp_run -s -h config
+Supported configuration options:
+  **.bin-recording=<bool>, default:true; per-object setting
+  check-signals=<bool>, default:true; per-run setting
+  cmdenv-autoflush=<bool>, default:false; per-run setting
+  cmdenv-config-name=<string>; global setting
+  ...
+\end{commandline}
+
+To see the option descriptions as well, use \fopt{-h configdetails}.
+
+\begin{commandline}
+$ opp_run -h configdetails
+\end{commandline}
+
+\section{Specifying Ini Files}
+\label{sec:run-sim:specifying-ini-files}
+
+The default ini file is \ffilename{omnetpp.ini}, and is loaded if no other ini file is given on the command line.
+
+Ini files can be specified both as plain arguments and with the \fopt{-f} option, so the following two commands are equivalent:
+
+\begin{commandline}
+$ ./fifo experiment.ini common.ini
+$ ./fifo -f experiment.ini -f common.ini
+\end{commandline}
+
+Multiple ini files can be given, and their contents will be merged. This allows for partitioning the configuration into separate files, for example to simulation options, module parameters and result recording options.
+
+\section{Specifying the NED Path}
+\label{sec:run-sim:specifying-ned-path}
+
+NED files are loaded from directories listed on the NED path. More precisely, they are loaded from the listed directories and their whole subdirectory trees. Directories are separated with a semicolon (\ttt{;}).
+
+\begin{note}
+Semicolon is used as separator on both Unix and Windows.
+\end{note}
+
+The NED path can be specified in several ways:
+\begin{itemize}
+  \item using the \ttt{NEDPATH} environment variable
+  \item using the \fopt{-n} command-line option
+  \item in ini files, with the \fconfig{ned-path} configuration option
+\end{itemize}
+
+NED path resolution rules are as follows:
+
+\begin{enumerate}
+  \item {\opp} checks for NED path specified on the command line with the \fopt{-n} option
+  \item If not found on the command line, it checks for the \ttt{NEDPATH} environment variable
+  \item The \fconfig{ned-path} option value from the ini file is appended to the result of the above steps
+  \item If the result is still empty, it falls back to "." (the current directory)
+\end{enumerate}
+
+
+\section{Selecting a User Interface}
+\label{sec:run-sim:selecting-user-interface}
+
+{\opp} simulations can be run under different user interfaces a.k.a. runtime environments. Currently the following user interfaces are supported:
+
+\begin{itemize}
+  \item Qtenv: Qt-based graphical user interface, available since {\opp} 5.0
+  \item Cmdenv: command-line user interface for batch execution
+\end{itemize}
+
+You would typically test and debug your simulation under Qtenv, then run actual simulation experiments from the command line or shell script, using Cmdenv. Qtenv is also better suited for educational and demonstration purposes.
+
+User interfaces are provided in the form of libraries that can be linked with statically, dynamically, or can be loaded at runtime.\footnote{Via the \fopt{-l} option, see section \ref{sec:run-sim:loading-extra-libraries}} When several user interface libraries are available in a simulation program, the user can select via command-line or ini file options which one to use. In the absence of such an option, the one with the highest priority will be started. Currently priorities are set such that Qtenv has the highest priority, then Cmdenv. By default, simulations are linked with all available user interfaces, but this can be controlled via \fprog{opp\_makemake} options or in the {\opp} global build configuration as well. The user interfaces available in a simulation program can be listed by running it the \fopt{-h userinterfaces} option.
+
+You can explicitly select a user interface on the command line with the \fopt{-u} option (specify \ttt{Qtenv} or \ttt{Cmdenv} as its argument), or by adding the \fconfig{user-interface} option to the configuration. If both the config option and the command line option are present, the command line option takes precedence.
+
+Since the graphical interfaces are the default (have higher priority), the most common use of the \fopt{-u} option is to select Cmdenv, e.g. for batch execution. The following example performs all runs of the Aloha example simulation using Cmdenv:
+
+\begin{commandline}
+$ ./aloha -c PureAlohaExperiment -u Cmdenv
+\end{commandline}
+
+
+\section{Selecting Configurations and Runs}
+\label{sec:run-sim:selecting-configuration-and-runs}
+
+All user interfaces support the \fopt{-c <configname>} and \fopt{-r <runfilter>} options for selecting which simulation(s) to run.
+
+The \fopt{-c} option expects the name of an ini file configuration as an argument. The \fopt{-r} option may be needed when the configuration expands to multiple simulation runs. That is the case when the configuration defines a \textit{parameter study} (see section \ref{sec:config-sim:parameter-studies}), or when it contains a \fconfig{repeat} configuration option that prescribes multiple repetitions with different RNG seeds (see section \ref{sec:config-sim:repeating-runs-with-different-seeds}). The \fopt{-r} option can then be used to select a subset of all runs (or one specific run, for that matter). A missing \fopt{-r} option selects all runs in the given configuration.
+
+It depends on the particular user interface how it interprets the \fopt{-c} and \fopt{-r} options. Cmdenv performs all selected simulation runs (optionally stopping after the first one that finishes with an error). GUI interfaces like Qtenv may use this information to fill the run selection dialog (or to set up the simulation automatically if there is only one matching run.)
+
+
+\subsection{Run Filter Syntax}
+\label{sec:run-sim:selecting-configuration-and-runs:syntax}
+
+The run filter accepts two syntaxes: a comma-separated list of run numbers or run number ranges (for example \ttt{1,2,5-10}), or an arithmetic expression. The arithmetic expression is similar to constraint expressions in the configuration (see section \ref{sec:config-sim:constraint-expression}). It may refer to iteration variables and to the repeat counter with the dollar syntax: \ttt{\$numHosts}, \ttt{\$repetition}. An example: \ttt{\$numHosts>10 \&\& \$mean==2}.
+
+Note that due to the presence of the dollar sign (and spaces), the expression should be protected against shell expansion, e.g. using apostrophes:
+
+\begin{commandline}
+$ ./aloha -c PureAlohaExperiment -r '$numHosts>10 && $mean<2'
+\end{commandline}
+
+Or, with double quotes:
+
+\begin{commandline}
+$ ./aloha -c PureAlohaExperiment -r "\$numHosts>10 && \$mean<2"
+\end{commandline}
+
+
+\subsection{The Query Option}
+\label{sec:run-sim:selecting-configuration-and-runs:queryoption}
+
+The \fopt{-q} (query) option complements \fopt{-c} and \fopt{-r}, and allows one to list the runs matched by the run filter. \fopt{-q} expects an argument that defines the format and verbosity of the output. Several formats are available: \ttt{numruns}, \ttt{runnumbers}, \ttt{runs}, \ttt{rundetails}, \ttt{runconfig}. Use \ttt{opp\_run -h} to get a complete list.
+
+\fopt{-q runs} prints one line of information with the iteration variables about each run that the run filter matches. An example:
+
+\begin{commandline}
+$ ./aloha -s -c PureAlohaExperiment -r '$numHosts>10 && $mean<2' -q runs
+Run 14: $numHosts=15, $mean=1, $repetition=0
+Run 15: $numHosts=15, $mean=1, $repetition=1
+Run 28: $numHosts=20, $mean

@@ -1,0 +1,30 @@
+\chapter{Running Simulations}
+\label{cha:run-sim}
+
+\section{Introduction}
+\label{cha:run-sim:intro}
+
+This chapter describes how to run simulations. It covers basic usage, user
+interfaces, running simulation campaigns, and many other topics.
+
+\section{Simulation Executables vs Libraries}
+\label{sec:run-sim:running}
+
+As we have seen in the \textit{Build} chapter, simulations may be compiled to an
+executable or to a shared library. When the build output is an executable,
+it can be run directly. For example, the Fifo example simulation can be
+run with the following command:
+
+\begin{commandline}
+$ ./fifo
+\end{commandline}
+
+Simulations compiled to a shared library can be run using the \fprog{opp\_run}
+program. For example, if we compiled the Fifo simulation to a
+shared library on Linux, the build output would be a \ttt{libfifo.so} file that
+could be run with the following command:
+
+\begin{commandline}
+$ opp_run -l fifo
+\end{commandline}
+
