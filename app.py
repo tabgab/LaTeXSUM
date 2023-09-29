@@ -1,8 +1,6 @@
 #!pip install llama-index
 #!pip install openai
-#!pip install pypdf
 #!pip install langchain
-#!pip install faiss-cpu
 #!pip install tiktoken (MAC-re kellett terminalban panaszkodott miatta)
 #!pip install colorama
 
@@ -12,10 +10,7 @@ import os
 import sys
 import subprocess
 import pkg_resources
-from colorama import Fore
-import uuid
-from langchain.llms import OpenAI
-import openai
+
 
 # Provide the path to the folder containing the PDF documents
 folder_path = "./"
@@ -99,6 +94,7 @@ packages = [
     "tiktoken",
     "colorama",
     "texttable",
+    "uuid",
 ]
 #Check for required packages and install them if needed.
 def check_package(package_name):
@@ -142,6 +138,11 @@ For example:
 if len(sys.argv) < 1:
 
        printhelp()
+
+from colorama import Fore
+import uuid
+from langchain.llms import OpenAI
+import openai
 
 #get OPENAI_API_KEY from config file
 def load_openai_key():
